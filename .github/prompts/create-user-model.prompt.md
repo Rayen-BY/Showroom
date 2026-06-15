@@ -1,4 +1,4 @@
-Create a Mongoose User model for a MERN showroom project.
+Create a Mongoose User model for the showroom project.
 
 Requirements:
 
@@ -15,11 +15,19 @@ Fields:
 
 Rules:
 
-* email must be unique
-* role default value = "utilisateur"
-* emailNotifications default value = false
-* timestamps enabled
-* use CommonJS syntax
-* export model with module.exports
+* email required
+* email unique
+* motDePasse required
+* role enum:
+  * utilisateur
+  * admin
+* role default = utilisateur
+* emailNotifications default = false
+
+Enable timestamps.
+
+Use CommonJS syntax.
+
+Export with module.exports.
 
 Generate only the model code.

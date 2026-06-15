@@ -5,19 +5,27 @@ const cors = require('cors');
 const morgan = require('morgan');
 
 const connectToDb = require('./config/connectToDb');
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
+
 
 // Middleware
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/api/auth", authRoutes);
 
 // Health route
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'API is running' });
 });
+/*une route technique de test. Sert a verifier :
+✓ Express démarre
+✓ Le serveur écoute sur le bon port
+✓ Les routes fonctionnent */
+
 
 // Start server after DB connection
 const PORT = process.env.PORT || 3000;
