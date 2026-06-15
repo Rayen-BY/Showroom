@@ -6,6 +6,7 @@ const morgan = require('morgan');
 
 const connectToDb = require('./config/connectToDb');
 const authRoutes = require("./routes/authRoutes");
+const profileRoutes = require("./routes/profileRoutes");
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
+app.use("/api", profileRoutes);
 
 // Health route
 app.get('/api/health', (req, res) => {
