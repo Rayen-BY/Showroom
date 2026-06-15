@@ -4,8 +4,36 @@ const User = require('../models/User');
 
 exports.register = async (req, res) => {
   try {
-    console.log('req.body reçu:', req.body);
     const { nom, prenom, email, motDePasse } = req.body;
+
+    // Vérification champs obligatoires
+    if (!nom || !prenom || !email || !motDePasse) {
+      return res.status(400).json({
+        success: false,
+        message: 'Tous les champs sont obligatoires',
+      });
+    }
+
+    // Validation email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Format email invalide',
+      });
+    }
+
+    // Validation mot de passe
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+    if (!passwordRegex.test(motDePasse)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Le mot de passe doit contenir au moins 8 caractères, une majuscule et un chiffre',
+      });
+    }
 
     const existingUser = await User.findOne({ email });
 
@@ -30,14 +58,14 @@ exports.register = async (req, res) => {
       success: true,
       message: 'Compte créé avec succès',
     });
-    } catch (error) {
+  } catch (error) {
     console.error(error);
 
     return res.status(500).json({
-        success: false,
-        message: error.message,
+      success: false,
+      message: error.message,
     });
-    }
+  }
 };
 
 exports.login = async (req, res) => {
