@@ -1,13 +1,9 @@
 const express = require('express');
 const authMiddleware = require('../middlewares/authMiddleware');
+const { getProfile } = require('../controllers/profileController');
 
 const router = express.Router();
 
-router.get('/profile', authMiddleware, (req, res) => {
-  res.json({
-    success: true,
-    user: req.user,
-  });
-});
+router.get('/profile', authMiddleware, getProfile);
 
 module.exports = router;
