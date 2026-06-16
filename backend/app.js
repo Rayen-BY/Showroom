@@ -3,10 +3,13 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const path = require('path');
 
 const connectToDb = require('./config/connectToDb');
 const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
+const vehicleRoutes = require("./routes/vehiculeRoutes");
+const marqueRoutes = require("./routes/marqueRoutes");
 
 const app = express();
 
@@ -16,8 +19,43 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/api/auth", authRoutes);
 app.use("/api", profileRoutes);
+app.use("/api/vehicules", vehicleRoutes);
+app.use('/api/marques', marqueRoutes);
+
+app.use((error, req, res, next) => {
+  if (error && error.message === 'Seules les images sont autorisées') {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+
+  if (error && error.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({
+      success: false,
+      message: 'Chaque image doit faire au maximum 5 Mo',
+    });
+  }
+
+  if (error && error.code === 'LIMIT_UNEXPECTED_FILE') {
+    return res.status(400).json({
+      success: false,
+      message: 'Vous pouvez envoyer au maximum 5 images',
+    });
+  }
+
+  if (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Erreur serveur',
+    });
+  }
+
+  return next();
+});
 
 // Health route
 app.get('/api/health', (req, res) => {
@@ -32,7 +70,7 @@ app.get('/api/health', (req, res) => {
 // Start server after DB connection
 const PORT = process.env.PORT || 3000;
 
-const start = async () => {
+const start = async () => { 
   try {
     await connectToDb();
     app.listen(PORT, () => {
@@ -44,6 +82,6 @@ const start = async () => {
   }
 };
 
-start();
-
+start(); 
+ 
 module.exports = app;

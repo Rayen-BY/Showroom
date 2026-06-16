@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "create-admin": "node scripts/createAdmin.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
