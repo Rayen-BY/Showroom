@@ -4,10 +4,12 @@ const userSchema = new mongoose.Schema(
   {
     nom: {
       type: String,
+      required: true,
       trim: true,
     },
     prenom: {
       type: String,
+      required: true,
       trim: true,
     },
     email: {
