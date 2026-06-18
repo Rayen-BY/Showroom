@@ -1,8 +1,8 @@
 require('dotenv').config();
 
 const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
+const cors = require('cors'); 
+const morgan = require('morgan'); 
 const path = require('path');
 
 const connectToDb = require('./config/connectToDb');
@@ -10,7 +10,7 @@ const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const vehicleRoutes = require("./routes/vehiculeRoutes");
 const marqueRoutes = require("./routes/marqueRoutes");
-
+const favoriRoutes = require('./routes/favoriRoutes');
 const app = express();
 
 
@@ -24,7 +24,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api", profileRoutes);
 app.use("/api/vehicules", vehicleRoutes);
 app.use('/api/marques', marqueRoutes);
-
+app.use('/api/favoris', favoriRoutes);
 app.use((error, req, res, next) => {
   if (error && error.message === 'Seules les images sont autorisées') {
     return res.status(400).json({
