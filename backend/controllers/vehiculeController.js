@@ -3,6 +3,8 @@ const Vehicule = require('../models/Vehicule');
 const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
+const User = require('../models/User');
+const { sendEmail } = require('../services/emailService');
 
 const isEmpty = (value) => value === undefined || value === null || value === '';
 
@@ -89,9 +91,100 @@ exports.addVehicle = async (req, res) => {
       images: normalizedImages,
     });
 
-    const createdVehicule = await Vehicule.findById(vehicule._id).populate(
+    const createdVehicule = await Vehicule.findById(
+      vehicule._id
+    ).populate(
       'marque',
       'nom'
+    );
+
+    // Utilisateurs abonnés aux notifications
+    const utilisateurs = await User.find({
+      emailNotifications: true,
+    });
+
+    await Promise.all(
+      utilisateurs.map((utilisateur) =>
+        sendEmail({
+          to: utilisateur.email,
+          subject: '🚗 Nouveau véhicule disponible',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 700px;">
+
+              <h1 style="color:#2563eb;">
+                🚗 Nouveau véhicule disponible
+              </h1>
+
+              <p>
+                Bonjour ${utilisateur.prenom},
+              </p>
+
+              <p>
+                Un nouveau véhicule vient d'être ajouté à notre showroom.
+              </p>
+
+              <hr>
+
+              <h3>Détails du véhicule</h3>
+
+              <p>
+                <strong>Marque :</strong>
+                ${createdVehicule.marque.nom}
+              </p>
+
+              <p>
+                <strong>Modèle :</strong>
+                ${createdVehicule.modele}
+              </p>
+
+              <p>
+                <strong>Année :</strong>
+                ${createdVehicule.annee}
+              </p>
+
+              <p>
+                <strong>Carburant :</strong>
+                ${createdVehicule.carburant}
+              </p>
+
+              <p>
+                <strong>Boîte :</strong>
+                ${createdVehicule.boiteVitesse}
+              </p>
+
+              <p>
+                <strong>Prix :</strong>
+                ${Number(
+                  createdVehicule.prix
+                ).toLocaleString('fr-FR')} DT
+              </p>
+
+              ${
+                createdVehicule.images?.length
+                  ? `
+                  <img
+                    src="${createdVehicule.images[0]}"
+                    width="450"
+                    style="border-radius:8px;"
+                  />
+                  `
+                  : ''
+              }
+
+              <hr>
+
+              <p>
+                Connectez-vous à la plateforme pour consulter la fiche complète.
+              </p>
+
+              <p>
+                <strong>Showroom Automobile</strong>
+              </p>
+
+            </div>
+          `,
+        })
+      )
     );
 
     return res.status(201).json({
@@ -99,6 +192,7 @@ exports.addVehicle = async (req, res) => {
       message: 'Véhicule ajouté avec succès',
       data: createdVehicule,
     });
+
   } catch (error) {
     if (error.name === 'ValidationError') {
       return res.status(400).json({

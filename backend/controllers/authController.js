@@ -4,7 +4,13 @@ const User = require('../models/User');
 
 exports.register = async (req, res) => {
   try {
-    const { nom, prenom, email, motDePasse } = req.body;
+    const {
+      nom,
+      prenom,
+      email,
+      motDePasse,
+      emailNotifications,
+    } = req.body;
 
     // Vérification champs obligatoires
     if (!nom || !prenom || !email || !motDePasse) {
@@ -52,6 +58,9 @@ exports.register = async (req, res) => {
       email,
       motDePasse: hashedPassword,
       role: 'utilisateur',
+      emailNotifications:
+        emailNotifications === true ||
+        emailNotifications === 'true',
     });
 
     return res.status(201).json({
