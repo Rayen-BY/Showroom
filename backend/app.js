@@ -70,7 +70,6 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'API is running' });
 });
 
-// Start server after DB connection
 const PORT = process.env.PORT || 3000;
 
 const start = async () => {
