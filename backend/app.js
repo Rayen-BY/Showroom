@@ -12,6 +12,7 @@ const vehicleRoutes = require('./routes/vehiculeRoutes');
 const marqueRoutes = require('./routes/marqueRoutes');
 const favoriRoutes = require('./routes/favoriRoutes');
 const reservationRoutes = require('./routes/reservationRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use('/api/vehicules', vehicleRoutes);
 app.use('/api/marques', marqueRoutes);
 app.use('/api/favoris', favoriRoutes);
 app.use('/api/reservations', reservationRoutes);
+app.use('/api/contact', contactRoutes);
 
 app.use((error, req, res, next) => {
   if (error && error.message === 'Seules les images sont autorisées') {
