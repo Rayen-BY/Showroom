@@ -6,24 +6,32 @@ const morgan = require('morgan');
 const path = require('path');
 
 const connectToDb = require('./config/connectToDb');
-const authRoutes = require("./routes/authRoutes");
-const profileRoutes = require("./routes/profileRoutes");
-const vehicleRoutes = require("./routes/vehiculeRoutes");
-const marqueRoutes = require("./routes/marqueRoutes");
+const authRoutes = require('./routes/authRoutes');
+const profileRoutes = require('./routes/profileRoutes');
+const vehicleRoutes = require('./routes/vehiculeRoutes');
+const marqueRoutes = require('./routes/marqueRoutes');
+const favoriRoutes = require('./routes/favoriRoutes');
+const reservationRoutes = require('./routes/reservationRoutes');
 
 const app = express();
-
 
 // Middleware
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use("/api/auth", authRoutes);
-app.use("/api", profileRoutes);
-app.use("/api/vehicules", vehicleRoutes);
+
+app.use(
+  '/uploads',
+  express.static(path.join(__dirname, 'uploads'))
+);
+
+app.use('/api/auth', authRoutes);
+app.use('/api', profileRoutes);
+app.use('/api/vehicules', vehicleRoutes);
 app.use('/api/marques', marqueRoutes);
+app.use('/api/favoris', favoriRoutes);
+app.use('/api/reservations', reservationRoutes);
 
 app.use((error, req, res, next) => {
   if (error && error.message === 'Seules les images sont autorisées') {
@@ -61,18 +69,14 @@ app.use((error, req, res, next) => {
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'API is running' });
 });
-/*une route technique de test. Sert a verifier :
-✓ Express démarre
-✓ Le serveur écoute sur le bon port
-✓ Les routes fonctionnent */
-
 
 // Start server after DB connection
 const PORT = process.env.PORT || 3000;
 
-const start = async () => { 
+const start = async () => {
   try {
     await connectToDb();
+
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
@@ -82,6 +86,6 @@ const start = async () => {
   }
 };
 
-start(); 
- 
+start();
+
 module.exports = app;
