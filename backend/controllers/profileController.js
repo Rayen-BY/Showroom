@@ -26,12 +26,11 @@ exports.getProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { nom, prenom, telephone, photoProfil, emailNotifications } = req.body;
+    const { nom, prenom, photoProfil, emailNotifications } = req.body;
 
     const update = {};
     if (nom !== undefined) update.nom = nom;
     if (prenom !== undefined) update.prenom = prenom;
-    if (telephone !== undefined) update.telephone = telephone;
     if (photoProfil !== undefined) update.photoProfil = photoProfil;
     if (typeof emailNotifications !== 'undefined') update.emailNotifications = !!emailNotifications;
 

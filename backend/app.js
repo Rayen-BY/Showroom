@@ -13,6 +13,7 @@ const marqueRoutes = require('./routes/marqueRoutes');
 const favoriRoutes = require('./routes/favoriRoutes');
 const reservationRoutes = require('./routes/reservationRoutes');
 const contactRoutes = require('./routes/contactRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use('/api/marques', marqueRoutes);
 app.use('/api/favoris', favoriRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/admin/dashboard',dashboardRoutes);
 
 app.use((error, req, res, next) => {
   if (error && error.message === 'Seules les images sont autorisées') {
@@ -42,7 +44,7 @@ app.use((error, req, res, next) => {
       message: error.message,
     });
   }
-
+  
   if (error && error.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({
       success: false,
