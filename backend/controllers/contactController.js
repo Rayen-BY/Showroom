@@ -1,4 +1,4 @@
-const { sendEmail } = require('../services/emailService');
+const {sendTelegramMessage,} = require('../services/telegramService');
 
 exports.contactUs = async (req, res) => {
   try {
@@ -25,62 +25,24 @@ exports.contactUs = async (req, res) => {
       });
     }
 
-    await sendEmail({
-      to: process.env.EMAIL_USER,
-      subject: `📩 Contact : ${sujet}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 700px;">
+    await sendTelegramMessage(`
+      📩 NOUVEAU MESSAGE CONTACT
 
-          <h1 style="color:#2563eb;">
-            📩 Nouveau message de contact
-          </h1>
+      Nom :
+      ${prenom} ${nom}
 
-          <hr>
+      Email :
+      ${email}
 
-          <p>
-            <strong>Nom :</strong>
-            ${nom}
-          </p>
+      Téléphone :
+      ${telephone}
 
-          <p>
-            <strong>Prénom :</strong>
-            ${prenom}
-          </p>
+      Sujet :
+      ${sujet}
 
-          <p>
-            <strong>Email :</strong>
-            ${email}
-          </p>
-
-          <p>
-            <strong>Téléphone :</strong>
-            ${telephone}
-          </p>
-
-          <p>
-            <strong>Sujet :</strong>
-            ${sujet}
-          </p>
-
-          <hr>
-
-          <p>
-            <strong>Message :</strong>
-          </p>
-
-          <blockquote
-            style="
-              background:#f5f5f5;
-              padding:10px;
-              border-left:4px solid #2563eb;
-            "
-          >
-            ${message}
-          </blockquote>
-
-        </div>
-      `,
-    });
+      Message :
+      ${message}
+      `);
 
     return res.status(200).json({
       success: true,

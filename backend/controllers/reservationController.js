@@ -4,6 +4,7 @@ const Reservation = require('../models/Reservation');
 const Vehicule = require('../models/Vehicule');
 const { sendEmail } = require('../services/emailService');
 const User = require('../models/User');
+const {sendTelegramMessage,} = require('../services/telegramService');
 
 exports.createReservation = async (req, res) => {
   try {
@@ -40,109 +41,30 @@ exports.createReservation = async (req, res) => {
       commentaire,
     });
     const utilisateur = await User.findById(req.user.id);
-    await sendEmail({
-      to: process.env.EMAIL_USER,
-      subject: 'Nouvelle demande d’essai',
-      html: `
-      <div style="font-family: Arial, sans-serif; max-width: 700px;">
+    await sendTelegramMessage(`
+      🚗 NOUVELLE RÉSERVATION
 
-        <h1 style="color:#2563eb;">
-          🚗 Nouvelle demande d'essai
-        </h1>
+      Client :
+      ${utilisateur.prenom} ${utilisateur.nom}
 
-        <p>
-          Une nouvelle réservation d'essai a été créée sur la plateforme.
-        </p>
+      Email :
+      ${utilisateur.email}
 
-        <hr>
+      Téléphone :
+      ${telephone}
 
-        <h3>Véhicule concerné</h3>
+      Véhicule :
+      ${vehicule.marque.nom} ${vehicule.modele}
 
-        <p>
-          <strong>Marque :</strong>
-          ${vehicule.marque.nom}
-        </p>
+      Prix :
+      ${vehicule.prix.toLocaleString('fr-FR')} DT
 
-        <p>
-          <strong>Modèle :</strong>
-          ${vehicule.modele}
-        </p>
+      Date souhaitée :
+      ${new Date(dateSouhaitee).toLocaleString('fr-FR')}
 
-        <p>
-          <strong>Prix :</strong>
-          ${vehicule.prix.toLocaleString('fr-FR')} DT
-        </p>
-
-        ${
-          vehicule.images?.length
-            ? `
-            <img
-              src="${vehicule.images[0]}"
-              width="400"
-              alt="Vehicule"
-              style="border-radius:8px;"
-            />
-            `
-            : ''
-        }
-
-        <hr>
-
-        <h3>Informations du client</h3>
-
-        <p>
-          <strong>Nom :</strong>
-          ${utilisateur.nom}
-        </p>
-
-        <p>
-          <strong>Prénom :</strong>
-          ${utilisateur.prenom}
-        </p>
-
-        <p>
-          <strong>Email :</strong>
-          ${utilisateur.email}
-        </p>
-
-        <p>
-          <strong>Téléphone :</strong>
-          ${telephone}
-        </p>
-
-
-        <p>
-          <strong>Date souhaitée :</strong>
-          ${new Date(dateSouhaitee).toLocaleString('fr-FR')}
-        </p>
-
-        <p>
-          <strong>Commentaire :</strong>
-        </p>
-
-        <blockquote
-          style="
-            background:#f5f5f5;
-            padding:10px;
-            border-left:4px solid #2563eb;
-          "
-        >
-          ${commentaire || 'Aucun commentaire'}
-        </blockquote>
-
-        <hr>
-
-        <p>
-          Connectez-vous au tableau de bord administrateur pour accepter ou refuser cette demande.
-        </p>
-
-        <p>
-          <strong>Showroom Automobile</strong>
-        </p>
-
-      </div>
-      `,
-    });
+      Commentaire :
+      ${commentaire || 'Aucun commentaire'}
+      `);
 
     return res.status(201).json({
       success: true,
@@ -365,55 +287,20 @@ exports.cancelReservation = async (req, res) => {
       reservation.vehicule
     ).populate('marque', 'nom');
 
-    await sendEmail({
-      to: process.env.EMAIL_USER,
-      subject: 'Annulation de réservation',
-      html: `
-        <div style="font-family: Arial, sans-serif;">
+    await sendTelegramMessage(`
+      ⚠️ RÉSERVATION ANNULÉE
 
-          <h1 style="color:#f59e0b;">
-            ⚠️ Réservation annulée
-          </h1>
+      Client :
+      ${utilisateur.prenom} ${utilisateur.nom}
 
-          <p>
-            Une réservation a été annulée par le client.
-          </p>
+      Email :
+      ${utilisateur.email}
 
-          <hr>
+      Véhicule :
+      ${vehicule.marque.nom} ${vehicule.modele}
 
-          <h3>Client</h3>
-
-          <p><strong>Nom :</strong> ${utilisateur.nom}</p>
-          <p><strong>Prénom :</strong> ${utilisateur.prenom}</p>
-          <p><strong>Email :</strong> ${utilisateur.email}</p>
-
-          <hr>
-
-          <h3>Véhicule</h3>
-
-          <p>
-            <strong>Marque :</strong>
-            ${vehicule.marque.nom}
-          </p>
-
-          <p>
-            <strong>Modèle :</strong>
-            ${vehicule.modele}
-          </p>
-
-          <hr>
-
-          <p>
-            La réservation a été annulée par le client.
-          </p>
-
-          <p>
-            <strong>Showroom Automobile</strong>
-          </p>
-
-        </div>
-      `,
-    });
+      La réservation a été annulée par le client.
+      `);
 
     return res.status(200).json({
       success: true,
