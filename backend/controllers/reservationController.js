@@ -5,6 +5,7 @@ const Vehicule = require('../models/Vehicule');
 const { sendEmail } = require('../services/emailService');
 const User = require('../models/User');
 const {sendTelegramMessage,} = require('../services/telegramService');
+const {createReservationEvent,} = require('../services/calendarService');
 
 exports.createReservation = async (req, res) => {
   try {
@@ -116,7 +117,14 @@ exports.acceptReservation = async (req, res) => {
       heureFinale,
     } = req.body;
 
-    const reservation = await Reservation.findById(id);
+    const reservation = await Reservation.findById(id)
+      .populate('utilisateur')
+      .populate({
+        path: 'vehicule',
+        populate: {
+          path: 'marque',
+        },
+    });
 
     if (!reservation) {
           return res.status(404).json({
@@ -130,6 +138,23 @@ exports.acceptReservation = async (req, res) => {
         reservation.heureFinale = heureFinale;
 
         await reservation.save();
+
+        const event = await createReservationEvent({
+          clientName:
+            `${reservation.utilisateur.prenom} ${reservation.utilisateur.nom}`,
+
+          vehicule:
+            `${reservation.vehicule.marque.nom} ${reservation.vehicule.modele}`,
+
+          dateFinale,
+
+          heureFinale,
+        });
+
+      reservation.calendarEventId = event.id;
+
+      await reservation.save();
+
         const utilisateur = await User.findById(
       reservation.utilisateur
     );
@@ -157,6 +182,12 @@ exports.acceptReservation = async (req, res) => {
           </p>
 
           <br>
+
+          <p>
+            <a href="${event.htmlLink}">
+              Voir dans Google Calendar
+            </a>
+          </p>
 
           <p>
             Merci pour votre confiance.
