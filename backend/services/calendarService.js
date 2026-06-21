@@ -11,49 +11,73 @@ const auth = new google.auth.GoogleAuth({
   ],
 });
 
-exports.createReservationEvent =
-  async ({
-    clientName,
-    vehicule,
-    dateFinale,
-    heureFinale,
-  }) => {
-    const calendar =
-      google.calendar({
-        version: 'v3',
-        auth,
-      });
+function formatGoogleDate(date) {
+  const pad = (value) =>
+    String(value).padStart(2, '0');
 
-    const startDate = new Date(
-      `${dateFinale}T${heureFinale}:00`
-    );
+  return (
+    `${date.getFullYear()}-` +
+    `${pad(date.getMonth() + 1)}-` +
+    `${pad(date.getDate())}T` +
+    `${pad(date.getHours())}:` +
+    `${pad(date.getMinutes())}:` +
+    `${pad(date.getSeconds())}`
+  );
+}
 
-    const endDate = new Date(startDate);
-    endDate.setHours(
-      endDate.getHours() + 1
-    );
+exports.createReservationEvent = async ({
+  clientName,
+  vehicule,
+  dateFinale,
+  heureFinale,
+}) => {
+  const calendar = google.calendar({
+    version: 'v3',
+    auth,
+  });
 
-    const event = {
-      summary: `Essai véhicule - ${vehicule}`,
-      description: `
+  const [hours, minutes] =
+    heureFinale.split(':');
+
+  const startDate = new Date(dateFinale);
+
+  startDate.setHours(
+    Number(hours),
+    Number(minutes),
+    0,
+    0
+  );
+
+  const endDate = new Date(startDate);
+  endDate.setHours(
+    endDate.getHours() + 1
+  );
+
+  const event = {
+    summary: `Essai véhicule - ${vehicule}`,
+
+    description: `
 Client : ${clientName}
 Véhicule : ${vehicule}
-      `,
-      start: {
-        dateTime: startDate.toISOString(),
-        timeZone: 'Africa/Tunis',
-      },
-      end: {
-        dateTime: endDate.toISOString(),
-        timeZone: 'Africa/Tunis',
-      },
-    };
+    `,
 
-    const response =
-      await calendar.events.insert({
-        calendarId: 'primary',
-        resource: event,
-      });
+    start: {
+      dateTime: formatGoogleDate(startDate),
+      timeZone: 'Africa/Tunis',
+    },
 
-    return response.data;
+    end: {
+      dateTime: formatGoogleDate(endDate),
+      timeZone: 'Africa/Tunis',
+    },
   };
+
+  const response =
+    await calendar.events.insert({
+      calendarId:
+        'rayenbenyahmed02@gmail.com', // ton agenda
+      resource: event,
+    });
+
+  return response.data;
+};
