@@ -14,6 +14,7 @@ const favoriRoutes = require('./routes/favoriRoutes');
 const reservationRoutes = require('./routes/reservationRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const recommendationRoutes = require('./routes/recommendationRoutes');
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use('/api/favoris', favoriRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/admin/dashboard',dashboardRoutes);
+app.use('/api/recommendations',recommendationRoutes);
 
 app.use((error, req, res, next) => {
   if (error && error.message === 'Seules les images sont autorisées') {
