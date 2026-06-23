@@ -47,8 +47,6 @@ exports.extractCriteria = async (message) => {
 
     Format obligatoire :
 
-    "isVehicleRequest": true,
-    "confidence": 0,
     {
       "marques": [],
       "modeles": [],
@@ -116,15 +114,65 @@ exports.extractCriteria = async (message) => {
     `;
 
   const response =
-    await ai.models.generateContent({
-      model: 'gemini-flash-lite-latest',
-      contents: prompt,
-    });
+  await ai.models.generateContent({
+    model: 'gemini-flash-lite-latest',
+    contents: prompt,
+  });
 
-  const text = response.text
-    .replace(/```json/g, '')
-    .replace(/```/g, '')
-    .trim();
+  try {
+    const text = response.text
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim();
 
-  return JSON.parse(text);
+    const jsonMatch =
+      text.match(/\{[\s\S]*\}/);
+
+    if (!jsonMatch) {
+      throw new Error(
+        'Aucun JSON trouvé dans la réponse Gemini'
+      );
+    }
+
+    const criteria =
+      JSON.parse(jsonMatch[0]);
+
+    return criteria;
+
+  } catch (error) {
+
+    console.error(
+      'Erreur parsing Gemini :',
+      error.message
+    );
+
+    return {
+      marques: [],
+      modeles: [],
+      typeVehicule: [],
+      carburant: [],
+      boiteVitesse: [],
+      prix: {
+        min: null,
+        max: null,
+      },
+      annee: {
+        min: null,
+        max: null,
+      },
+      kilometrage: {
+        min: null,
+        max: null,
+      },
+      nombrePlaces: {
+        min: null,
+        max: null,
+      },
+      consommation: {
+        min: null,
+        max: null,
+      },
+    };
+
+  }
 };

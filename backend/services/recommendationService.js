@@ -14,27 +14,6 @@ exports.getRecommendations =
     const criteria =
       await extractCriteria(message);
 
-    if (!criteria.isVehicleRequest) {
-      return {
-        criteria,
-        warnings: [],
-        message:
-          "Votre demande ne concerne pas la recherche d'un véhicule ou n'a pas été comprise.",
-        recommendations: [],
-      };
-
-    }
-
-    if (criteria.confidence < 0.5) {
-      return {
-        criteria,
-        warnings: [],
-        message:
-          "Votre demande est ambiguë. Veuillez préciser votre besoin automobile.",
-        recommendations: [],
-      };
-    }
-
     console.log(
       JSON.stringify(
         criteria,
@@ -42,6 +21,35 @@ exports.getRecommendations =
         2
       )
     );
+
+    const hasCriteria =
+      criteria.marques?.length ||
+      criteria.modeles?.length ||
+      criteria.typeVehicule?.length ||
+      criteria.carburant?.length ||
+      criteria.boiteVitesse?.length ||
+      criteria.prix?.min ||
+      criteria.prix?.max ||
+      criteria.annee?.min ||
+      criteria.annee?.max ||
+      criteria.kilometrage?.min ||
+      criteria.kilometrage?.max ||
+      criteria.nombrePlaces?.min ||
+      criteria.nombrePlaces?.max ||
+      criteria.consommation?.min ||
+      criteria.consommation?.max;
+
+    if (!hasCriteria) {
+
+      return {
+        criteria,
+        warnings: [],
+        message:
+          "Je n'ai pas compris votre besoin automobile. Veuillez préciser votre recherche.",
+        recommendations: [],
+      };
+
+    }
 
     let vehicules =
       await Vehicule.find()
