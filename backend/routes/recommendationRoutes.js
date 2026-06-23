@@ -6,8 +6,11 @@ const {
 
 const router = express.Router();
 
+const {recommendationLimiter,} = require('../middlewares/rateLimiter');
+
 router.post(
   '/',
+  recommendationLimiter,
   recommend
 );
 
