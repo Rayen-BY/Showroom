@@ -5,68 +5,126 @@ const ai = new GoogleGenAI({
 });
 
 exports.extractCriteria = async (message) => {
+
   const prompt = `
-Tu es un assistant spécialisé en recommandation automobile.
+    Tu es un moteur d'extraction sémantique automobile.
 
-Tu dois analyser le besoin utilisateur et retourner UNIQUEMENT un JSON valide.
+    Tu dois analyser le message utilisateur et retourner UNIQUEMENT un JSON valide.
 
-Champs disponibles :
+    Tu peux uniquement utiliser les attributs suivants :
 
-marque
-modele
-prix
-carburant
-boiteVitesse
-kilometrage
-annee
-typeVehicule
-nombrePlaces
-consommation
+    marques
+    modeles
+    typeVehicule
+    carburant
+    boiteVitesse
+    prix
+    annee
+    kilometrage
+    nombrePlaces
+    consommation
 
-Exemples :
+    Interprétations implicites :
 
-"voiture économique"
-=> priorité prix faible et consommation faible
+    "faible consommation"
+    → consommation.max = 6
 
-"voiture familiale"
-=> priorité nombrePlaces et typeVehicule
+    "économique"
+    → consommation.max = 6
 
-"ville"
-=> priorité consommation faible
+    "faible kilométrage"
+    → kilometrage.max = 50000
 
-Réponds uniquement au format JSON :
+    "récent"
+    → annee.min = 2021
 
-{
-  "budgetMax": null,
-  "marque": null,
-  "usage": null,
-  "carburant": null,
-  "boiteVitesse": null,
-  "nombrePlacesMin": null,
-  "priorities": {
-    "prix": 0,
-    "consommation": 0,
-    "annee": 0,
-    "kilometrage": 0,
-    "nombrePlaces": 0
-  }
-}
+    "familiale"
+    → nombrePlaces.min = 5
+    → typeVehicule = SUV ou Berline
 
-Message utilisateur :
+    "ville"
+    → typeVehicule = Citadine
 
-${message}
-`;
+    Format obligatoire :
+
+    "isVehicleRequest": true,
+    "confidence": 0,
+    {
+      "marques": [],
+      "modeles": [],
+
+      "typeVehicule": [],
+      "carburant": [],
+      "boiteVitesse": [],
+
+      "prix": {
+        "min": null,
+        "max": null
+      },
+
+      "annee": {
+        "min": null,
+        "max": null
+      },
+
+      "kilometrage": {
+        "min": null,
+        "max": null
+      },
+
+      "nombrePlaces": {
+        "min": null,
+        "max": null
+      },
+
+      "consommation": {
+        "min": null,
+        "max": null
+      }
+    }
+
+    Règles :
+
+    - Tu peux déduire des informations implicites.
+    - Tu peux proposer plusieurs valeurs.
+    - N'invente pas des données numériques absentes.
+    - Si une information est inconnue, retourne null ou [].
+    - Ne retourne jamais autre chose que le JSON.
+
+    Exemples :
+
+    Message :
+    "Je suis commercial"
+
+    Réponse :
+    {
+      "marques": [],
+      "modeles": [],
+      "typeVehicule": ["Berline", "SUV"],
+      "carburant": ["Diesel", "Hybride"],
+      "boiteVitesse": ["Automatique"],
+      "prix": { "min": null, "max": null },
+      "annee": { "min": null, "max": null },
+      "kilometrage": { "min": null, "max": null },
+      "nombrePlaces": { "min": null, "max": null },
+      "consommation": { "min": null, "max": null }
+    }
+
+    Message utilisateur :
+
+    ${message}
+    `;
 
   const response =
     await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-flash-lite-latest',
       contents: prompt,
     });
 
-  return JSON.parse(
-    response.text
-      .replace(/```json/g, '')
-      .replace(/```/g, '')
-      .trim()
-  );
+  const text = response.text
+    .replace(/```json/g, '')
+    .replace(/```/g, '')
+    .trim();
+
+  return JSON.parse(text);
 };

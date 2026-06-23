@@ -14,26 +14,351 @@ exports.getRecommendations =
     const criteria =
       await extractCriteria(message);
 
-    const vehicules =
+    if (!criteria.isVehicleRequest) {
+      return {
+        criteria,
+        warnings: [],
+        message:
+          "Votre demande ne concerne pas la recherche d'un véhicule ou n'a pas été comprise.",
+        recommendations: [],
+      };
+
+    }
+
+    if (criteria.confidence < 0.5) {
+      return {
+        criteria,
+        warnings: [],
+        message:
+          "Votre demande est ambiguë. Veuillez préciser votre besoin automobile.",
+        recommendations: [],
+      };
+    }
+
+    console.log(
+      JSON.stringify(
+        criteria,
+        null,
+        2
+      )
+    );
+
+    let vehicules =
       await Vehicule.find()
         .populate('marque', 'nom');
 
+    const warnings = [];
+
+    const availableMarques = [
+      ...new Set(
+        vehicules.map(
+          v => v.marque?.nom
+        )
+      )
+    ];
+
+    const availableTypes = [
+      ...new Set(
+        vehicules.map(
+          v => v.typeVehicule
+        )
+      )
+    ];
+
+    const availableCarburants = [
+      ...new Set(
+        vehicules.map(
+          v => v.carburant
+        )
+      )
+    ];
+
+    const availableBoites = [
+      ...new Set(
+        vehicules.map(
+          v => v.boiteVitesse
+        )
+      )
+    ];
+
+    // -------------------
+    // FILTRES STRICTS
+    // -------------------
+
+    if (criteria.prix?.max) {
+
+      vehicules =
+        vehicules.filter(
+          v =>
+            v.prix <=
+            criteria.prix.max
+        );
+    }
+
+    if (criteria.prix?.min) {
+
+      vehicules =
+        vehicules.filter(
+          v =>
+            v.prix >=
+            criteria.prix.min
+        );
+    }
+
+    if (
+      criteria.nombrePlaces?.min
+    ) {
+
+      vehicules =
+        vehicules.filter(
+          v =>
+            v.nombrePlaces >=
+            criteria.nombrePlaces.min
+        );
+    }
+
+    if (
+      criteria.nombrePlaces?.max
+    ) {
+
+      vehicules =
+        vehicules.filter(
+          v =>
+            v.nombrePlaces <=
+            criteria.nombrePlaces.max
+        );
+    }
+
+    // -------------------
+    // MARQUES
+    // -------------------
+
+    if (
+      criteria.marques?.length
+    ) {
+
+      const validMarques =
+        criteria.marques.filter(
+          marque =>
+            availableMarques.some(
+              m =>
+                m.toLowerCase()
+                  .includes(
+                    marque.toLowerCase()
+                  )
+            )
+        );
+
+      const invalidMarques =
+        criteria.marques.filter(
+          marque =>
+            !validMarques.includes(
+              marque
+            )
+        );
+
+      invalidMarques.forEach(
+        marque =>
+          warnings.push(
+            `La marque "${marque}" n'existe pas dans notre catalogue.`
+          )
+      );
+
+      if (
+        validMarques.length
+      ) {
+
+        const filtered =
+          vehicules.filter(
+            v =>
+              validMarques.some(
+                marque =>
+                  v.marque.nom
+                    .toLowerCase()
+                    .includes(
+                      marque.toLowerCase()
+                    )
+              )
+          );
+
+        if (
+          filtered.length > 0
+        ) {
+          vehicules =
+            filtered;
+        }
+      }
+    }
+
+    // -------------------
+    // TYPE VEHICULE
+    // -------------------
+
+    if (
+      criteria.typeVehicule?.length
+    ) {
+
+      const validTypes =
+        criteria.typeVehicule.filter(
+          type =>
+            availableTypes.includes(
+              type
+            )
+        );
+
+      const invalidTypes =
+        criteria.typeVehicule.filter(
+          type =>
+            !validTypes.includes(
+              type
+            )
+        );
+
+      invalidTypes.forEach(
+        type =>
+          warnings.push(
+            `Le type de véhicule "${type}" n'existe pas dans notre catalogue.`
+          )
+      );
+
+      if (
+        validTypes.length
+      ) {
+
+        const filtered =
+          vehicules.filter(
+            v =>
+              validTypes.includes(
+                v.typeVehicule
+              )
+          );
+
+        if (
+          filtered.length > 0
+        ) {
+          vehicules =
+            filtered;
+        }
+      }
+    }
+
+    // -------------------
+    // BOITE VITESSE
+    // -------------------
+
+    if (
+      criteria.boiteVitesse?.length
+    ) {
+
+      const validBoites =
+        criteria.boiteVitesse.filter(
+          boite =>
+            availableBoites.includes(
+              boite
+            )
+        );
+
+      if (
+        validBoites.length
+      ) {
+
+        const filtered =
+          vehicules.filter(
+            v =>
+              validBoites.includes(
+                v.boiteVitesse
+              )
+          );
+
+        if (
+          filtered.length > 0
+        ) {
+          vehicules =
+            filtered;
+        }
+      }
+    }
+
+    // -------------------
+    // CARBURANT
+    // -------------------
+
+    if (
+      criteria.carburant?.length
+    ) {
+
+      const validCarburants =
+        criteria.carburant.filter(
+          carburant =>
+            availableCarburants.includes(
+              carburant
+            )
+        );
+
+      if (
+        validCarburants.length
+      ) {
+
+        const filtered =
+          vehicules.filter(
+            v =>
+              validCarburants.includes(
+                v.carburant
+              )
+          );
+
+        if (
+          filtered.length > 0
+        ) {
+          vehicules =
+            filtered;
+        }
+      }
+    }
+
+    // -------------------
+    // SCORE
+    // -------------------
+
     const scored =
-      vehicules.map((vehicule) => ({
-        vehicule,
-        score:
-          calculateScore(
+      vehicules
+        .map(
+          (vehicule) => ({
             vehicule,
-            criteria
-          ),
-      }));
+            score:
+              calculateScore(
+                vehicule,
+                criteria
+              ),
+          })
+        )
+        .filter(
+          item =>
+            item.score > 0
+        );
 
     scored.sort(
-      (a, b) => b.score - a.score
+      (a, b) =>
+        b.score - a.score
     );
+
+    if (!scored.length) {
+      return {
+        criteria,
+        warnings,
+        message:
+          'Aucun véhicule ne correspond suffisamment à votre recherche.',
+        recommendations: [],
+      };
+    }
 
     return {
       criteria,
+      warnings,
+      message:
+        warnings.length
+          ? 'Certaines préférences ne sont pas disponibles dans notre catalogue. Nous vous proposons les véhicules les plus proches.'
+          : null,
       recommendations:
         scored.slice(0, 3),
     };
